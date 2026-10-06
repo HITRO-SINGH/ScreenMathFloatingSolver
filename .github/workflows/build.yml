@@ -1,0 +1,44 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Extract project
+        run: |
+          mkdir project
+          unzip -q ScreenMathFloatingSolver-clean.zip -d project
+
+      - name: Install Gradle
+        run: |
+          curl -L -o gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle.zip -d "$HOME/gradle"
+
+      - name: Build APK
+        run: |
+          cd project/ScreenMathFloatingSolver-clean
+          "$HOME/gradle/gradle-8.7/bin/gradle" assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: screen-math-solver-debug-apk
+          path: project/ScreenMathFloatingSolver-clean/app/build/outputs/apk/debug/app-debug.apk
